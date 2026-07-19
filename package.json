@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc",
+    "build": "tsup",
     "start": "node dist/app.js",
     "dev": "tsx watch app.ts"
   },
@@ -22,6 +25,7 @@
     "@types/node": "^26.1.1",
     "eslint": "^10.7.0",
     "prettier": "^3.9.5",
+    "tsup": "^8.5.1",
     "tsx": "^4.23.1",
     "typescript": "^7.0.2"
   }
