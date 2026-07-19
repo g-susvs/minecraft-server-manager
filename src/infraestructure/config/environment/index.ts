@@ -22,7 +22,6 @@ export const environment: IEnvironment = {
     instanceType: process.env.EC2_INSTANCE_TYPE ?? 't3.small',
     subnetId: required('EC2_SUBNET_ID'),
     securityGroupId: required('EC2_SECURITY_GROUP_ID'),
-    instanceProfile: process.env.EC2_INSTANCE_PROFILE ?? '',
   },
   tags: {
     managedBy: process.env.TAG_MANAGED_BY ?? 'minecraft-manager',

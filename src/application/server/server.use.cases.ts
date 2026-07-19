@@ -1,5 +1,6 @@
 import type { IServerProvider } from '../../domain/repositories/server.provider.interface';
 import type {
+  ICreateServerInput,
   IServer,
   TServerStatus,
 } from '../../domain/entities/server.entity';
@@ -17,9 +18,12 @@ export class ServerUseCases {
    * servicio de aplicación que combine este caso de uso con el repositorio de
    * Prisma, de modo que el caso de uso siga teniendo una sola responsabilidad.
    */
-  async createServer(name: string): Promise<IServer> {
-    const userData = this.generateUserDataScript();
-    return this.appContext.providers.serverProvider.create(name, userData);
+  async createServer(input: ICreateServerInput): Promise<IServer> {
+    const userData = this.generateUserDataScript(input);
+    return this.appContext.providers.serverProvider.create(
+      input.name,
+      userData,
+    );
   }
 
   async startServer(instanceId: string): Promise<TServerStatus> {
@@ -62,8 +66,13 @@ export class ServerUseCases {
 
   /**
    * Genera el script de User Data que instala y arranca Minecraft Bedrock.
+   *
+   * `name` se interpola dentro de un script que corre como root en la
+   * instancia, por eso el esquema de validación restringe el campo a
+   * caracteres seguros antes de llegar hasta aquí. `difficulty` es seguro por
+   * construcción: solo puede ser uno de los literales de `SERVER_DIFFICULTIES`.
    */
-  private generateUserDataScript(): string {
+  private generateUserDataScript({ name, difficulty }: ICreateServerInput) {
     const script = `#!/bin/bash
 # Update OS and install dependencies
 apt-get update -y
@@ -79,6 +88,17 @@ BEDROCK_URL="${environment.minecraft.bedrockServerUrl}"
 su - minecraft -c "wget -q $BEDROCK_URL -O bedrock-server.zip"
 su - minecraft -c "unzip -q bedrock-server.zip -d server"
 su - minecraft -c "rm bedrock-server.zip"
+
+# Configure server.properties
+# IMPORTANTE: el paquete de Bedrock trae 'allow-list=true' con un allowlist.json
+# vacio, lo que hace que el servidor rechace a TODOS los jugadores con el error
+# "No estas invitado a jugar en este servidor". Hay que desactivarlo aqui porque
+# el servicio systemd corre sin consola interactiva: no hay forma de ejecutar el
+# comando 'allowlist off' despues de arrancar.
+PROPS=/opt/minecraft/server/server.properties
+sed -i "s/^allow-list=.*/allow-list=false/" $PROPS
+sed -i "s/^server-name=.*/server-name=${name}/" $PROPS
+sed -i "s/^difficulty=.*/difficulty=${difficulty}/" $PROPS
 
 # Create systemd service
 cat << 'EOF' > /etc/systemd/system/minecraft.service

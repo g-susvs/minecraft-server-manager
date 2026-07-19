@@ -14,15 +14,19 @@ export class Server {
 
     this.middlewares();
     this.routes();
+    this.errorHandling();
   }
 
   middlewares() {
     this.app.use(express.json());
-    this.app.use(errorMiddleware);
   }
 
   routes() {
     this.app.use('/api', this.api);
+  }
+
+  errorHandling() {
+    this.app.use(errorMiddleware);
   }
 
   listen() {

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Logger } from '../../libs/logger';
+import { AppError } from '../../libs/app.error';
 
 export const errorMiddleware = (
   error: unknown,
@@ -11,6 +12,27 @@ export const errorMiddleware = (
     return next(error);
   }
 
+  if (error instanceof AppError && error.statusCode < 500) {
+    // log de errores controlados
+    Logger.log(`[${error.statusCode}] ${error.message}`);
+
+    return res.status(error.statusCode).json({
+      message: error.message,
+      success: false,
+      ...(error.details ? { details: error.details } : {}),
+    });
+  }
+
+  Logger.error(error);
+
+  if (error instanceof AppError) {
+    return res.status(error.statusCode).json({
+      message: error.message,
+      success: false,
+      ...(error.details ? { details: error.details } : {}),
+    });
+  }
+
   const statusCode =
     typeof error === 'object' &&
     error !== null &&
@@ -20,9 +42,9 @@ export const errorMiddleware = (
       : 500;
 
   const message =
-    error instanceof Error ? error.message : 'Internal server error';
-
-  Logger.error(error);
+    statusCode < 500 && error instanceof Error
+      ? error.message
+      : 'Internal server error';
 
   return res.status(statusCode).json({
     message,

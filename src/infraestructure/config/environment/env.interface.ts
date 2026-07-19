@@ -9,7 +9,6 @@ export interface IEnvironment {
     instanceType: string;
     subnetId: string;
     securityGroupId: string;
-    instanceProfile: string;
   };
   tags: {
     managedBy: string;

@@ -34,12 +34,29 @@ export class EC2Provider implements IServerProvider {
       MaxCount: 1,
       ImageId: environment.ec2.amiId,
       InstanceType: environment.ec2.instanceType as _InstanceType,
-      SecurityGroupIds: [environment.ec2.securityGroupId],
-      SubnetId: environment.ec2.subnetId,
       UserData: userData,
-      IamInstanceProfile: environment.ec2.instanceProfile
-        ? { Name: environment.ec2.instanceProfile }
-        : undefined,
+      /**
+       * La IP pública se pide explícitamente en vez de depender del atributo
+       * `MapPublicIpOnLaunch` de la subnet: sin esto la instancia nace sin IP
+       * pública y los jugadores no pueden conectarse.
+       *
+       * Se usa la IP auto-asignada (no una Elastic IP) porque solo se cobra
+       * mientras la instancia corre; una EIP se cobra 24/7 incluso con el
+       * servidor apagado. La contrapartida es que la IP cambia en cada
+       * arranque, por eso `findById` la relee en cada consulta.
+       *
+       * `SubnetId` y `Groups` van dentro de la interfaz: AWS rechaza el
+       * request si además se declaran a nivel raíz.
+       */
+      NetworkInterfaces: [
+        {
+          DeviceIndex: 0,
+          AssociatePublicIpAddress: true,
+          SubnetId: environment.ec2.subnetId,
+          Groups: [environment.ec2.securityGroupId],
+          DeleteOnTermination: true,
+        },
+      ],
       TagSpecifications: [
         {
           ResourceType: 'instance',
