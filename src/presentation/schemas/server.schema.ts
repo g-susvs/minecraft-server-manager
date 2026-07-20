@@ -25,6 +25,17 @@ export const createServerSchema = z.object({
       error: `difficulty debe ser uno de: ${SERVER_DIFFICULTIES.join(', ')}`,
     })
     .default(DEFAULT_SERVER_DIFFICULTY),
+
+  showCoordinates: z
+    .boolean({ error: 'showCoordinates debe ser true o false' })
+    .default(true),
+  bonusChest: z
+    .boolean({ error: 'bonusChest debe ser true o false' })
+    .default(false),
+
+  startingMap: z
+    .boolean({ error: 'startingMap debe ser true o false' })
+    .default(false),
 });
 
 export type TCreateServerDto = z.infer<typeof createServerSchema>;

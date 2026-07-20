@@ -32,4 +32,7 @@ export interface IServer {
 export interface ICreateServerInput {
   name: string;
   difficulty: TServerDifficulty;
+  showCoordinates: boolean;
+  bonusChest: boolean;
+  startingMap: boolean;
 }

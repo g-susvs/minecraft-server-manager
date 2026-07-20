@@ -22,8 +22,9 @@ export class ServerController {
 
   createServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name, difficulty } = req.body as TCreateServerDto;
-      const result = await this.useCases.createServer({ name, difficulty });
+      const result = await this.useCases.createServer(
+        req.body as TCreateServerDto,
+      );
       new AppResponse(res, result);
     } catch (error) {
       next(error);
