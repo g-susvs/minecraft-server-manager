@@ -39,3 +39,18 @@ export const createServerSchema = z.object({
 });
 
 export type TCreateServerDto = z.infer<typeof createServerSchema>;
+
+/**
+ * Los IDs de instancia de EC2 son `i-` seguido de 8 o 17 caracteres hex.
+ * Validar el formato evita gastar una llamada a AWS por cada ruta mal escrita.
+ */
+export const serverParamsSchema = z.object({
+  instanceId: z
+    .string({ error: 'instanceId es requerido' })
+    .regex(
+      /^i-[0-9a-f]{8}([0-9a-f]{9})?$/,
+      'No tiene el formato de un ID(ej. i-0a1b2c3d)',
+    ),
+});
+
+export type TServerParamsDto = z.infer<typeof serverParamsSchema>;

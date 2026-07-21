@@ -5,6 +5,7 @@ import type {
   TServerStatus,
 } from '../../domain/entities/server.entity';
 import { environment } from '../../infraestructure/config/environment';
+import { AppError } from '../../libs/app.error';
 import type { IAppContext } from '../../domain/repositories/app-context.interface';
 
 export class ServerUseCases {
@@ -46,7 +47,7 @@ export class ServerUseCases {
       await this.appContext.providers.serverProvider.findById(instanceId);
 
     if (!server) {
-      throw new Error(`Server not found: ${instanceId}`);
+      throw AppError.notFound(`Server not found: ${instanceId}`);
     }
 
     return server;
