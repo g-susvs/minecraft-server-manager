@@ -1,11 +1,14 @@
-export type TServerStatus =
-  | 'pending'
-  | 'running'
-  | 'stopping'
-  | 'stopped'
-  | 'shutting-down'
-  | 'terminated'
-  | 'unknown';
+export const SERVER_STATUSES = [
+  'pending',
+  'running',
+  'stopping',
+  'stopped',
+  'shutting-down',
+  'terminated',
+  'unknown',
+] as const;
+
+export type TServerStatus = (typeof SERVER_STATUSES)[number];
 
 /**
  * Valores admitidos por `difficulty` en el server.properties de Bedrock.

@@ -2,6 +2,7 @@ import express, { type Application } from 'express';
 import { serverRouter } from '../presentation/routes/server.router';
 import { AppContext } from './config/app-context';
 import type { IAppContext } from '../domain/repositories/app-context.interface';
+import { docsRouter } from '../presentation/docs/docs.router';
 
 class Api {
   api: Application;
@@ -17,6 +18,8 @@ class Api {
         success: true,
       });
     });
+
+    this.api.use('/docs', docsRouter);
 
     const routes = this.routes();
     routes.forEach((routerInstance) => {
