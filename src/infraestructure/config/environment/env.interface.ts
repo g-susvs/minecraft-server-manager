@@ -17,4 +17,7 @@ export interface IEnvironment {
   minecraft: {
     bedrockServerUrl: string;
   };
+  cors: {
+    allowedOrigins: string[];
+  };
 }

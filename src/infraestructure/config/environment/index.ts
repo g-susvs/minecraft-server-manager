@@ -30,4 +30,10 @@ export const environment: IEnvironment = {
   minecraft: {
     bedrockServerUrl: required('BEDROCK_SERVER_URL'),
   },
+  cors: {
+    allowedOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:4200,http://localhost:4300')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  },
 };
