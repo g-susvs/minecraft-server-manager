@@ -131,6 +131,7 @@ Type=simple
 User=minecraft
 WorkingDirectory=/opt/minecraft/server
 Environment=LD_LIBRARY_PATH=/opt/minecraft/server
+ExecStartPre=/opt/minecraft/update-public-ip.sh
 ExecStart=/usr/bin/screen -L -Logfile /opt/minecraft/console.log -DmS minecraft /opt/minecraft/server/bedrock_server
 ExecStop=/usr/bin/screen -S minecraft -p 0 -X stuff "stop\\015"
 TimeoutStopSec=90
@@ -139,6 +140,31 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
+
+# Script que actualiza la IP publica en server-udp-ports antes de cada arranque.
+#
+# AWS asigna una IP publica nueva cada vez que la instancia se detiene y vuelve a
+# encender. El servidor anuncia server-udp-ports a los clientes, asi que si la IP
+# cambia y nadie la actualiza, los jugadores no pueden conectar. Este script lee
+# la IP actual desde los metadatos de la instancia (IMDSv2) y la escribe antes de
+# que arranque Bedrock. Se ejecuta como ExecStartPre del servicio.
+cat << 'IPSCRIPT' > /opt/minecraft/update-public-ip.sh
+#!/bin/bash
+PROPS=/opt/minecraft/server/server.properties
+TOKEN=$(curl -s -m 5 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+IP=""
+for _ in 1 2 3 4 5; do
+  IP=$(curl -s -m 5 -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+  [ -n "$IP" ] && break
+  sleep 2
+done
+if [ -z "$IP" ]; then
+  echo "update-public-ip: no se pudo obtener la IP publica" >&2
+  exit 0
+fi
+sed -i "s|^server-udp-ports=.*|server-udp-ports=\${IP}:19400-19500:19400-19500|" "$PROPS"
+IPSCRIPT
+chmod 755 /opt/minecraft/update-public-ip.sh
 
 # Enable and start the service
 systemctl enable minecraft
